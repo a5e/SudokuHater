@@ -3,8 +3,8 @@
 sudoku :-
 	grille(Table),
 	structure(Table,Groupes),
-	possibilites(Table,Groupes,Possibilites),
-	afficher(Possibilites).
+	voisins(Table,Groupes,Voisins).
+	%possibilites(Table,Groupes,0,Possibilites).
 	
 grille(Table) :-
 	Table = [
@@ -20,18 +20,47 @@ grille(Table) :-
     _, _, _, 4, 1, 9, _, _, 5,
     _, _, _, _, 8, _, _, 7, 9].
 
-afficher([]). % condition d'arrêt
-afficher([T|Q]):-
-    write(T),nl,
-    write(Q).
 
-possibilites([],_,[]).
-possibilites([Case|Table],Groupes,[Result|Results]) :-
-	include(memberchk(Case),Groupes,Voisins),
-	subtract([1,2,3,4,5,6,7,8,9],Voisins,Result),
-	possibilites(Table,Groupes,Results).
 
-% Liste qui contient les listes de tous les groupes (lignes, colonnes et secteurs)
+strict_member(E, [Head|_]) :- E == Head, !.
+strict_member(E, [_|Tail]) :- strict_member(E, Tail).
+
+	
+possibilites([Case|Table], Groupes, Index, [Result|Results]) :-
+	 (var(Case) ->
+	 LigneIndex is Index div 9,
+	 ColonneIndex is Index mod 9 + 9,
+	 SecteurIndex is LigneIndex div 3 * 3 + ColonneIndex div 3 + 18,
+	 nth0(LigneIndex, Groupes, Ligne),
+	 nth0(ColonneIndex, Groupes, Colonne),
+	 nth0(SecteurIndex, Groupes, Secteur),
+	 append([Ligne, Colonne, Secteur], Voisins),
+	 flatten(Voisins, Voisins2),
+	 include(atomic, Voisins2, Voisins3),
+	 subtract([1,2,3,4,5,6,7,8,9],Voisins3,Result);
+	 Result = Case),
+	 writeln(Result),
+	 NewIndex is Index + 1,
+	 possibilites(Table,Groupes,NewIndex,Results);
+
+voisins([],_,[]).
+voisins([Case|Table],Groupes,[Result|Results]) :-
+	not(integer(Case)),
+	!,
+	include(strict_member(Case),Groupes,Result),
+	voisins(Table,Groupes,Results).
+voisins([_|Table],Groupes,[Results]) :-
+	voisins(Table, Groupes, Results).
+	
+
+
+%possibilites([],_,[]).
+%possibilites([Case|Table],[Voisin|Voisins],[Result|Results]) :-
+	%not(integer(Case)),
+%	subtract([1,2,3,4,5,6,7,8,9],Voisin,Result),
+	%possibilites(Table,Voisins,Results).
+
+% Liste qui contient les listes de tous lpes groupes (lignes, colonnes et secteurs)
 structure(Table, Groupes) :-
 	Table = [
     C11, C12, C13, C14, C15, C16, C17, C18, C19,
