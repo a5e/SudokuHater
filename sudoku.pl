@@ -4,7 +4,7 @@ sudoku :-
 	grille(Table),
 	structure(Table,Groupes),
 	voisins(Table,Groupes,Voisins).
-	%possibilites(Table,Groupes,0,Possibilites).
+	possibilites(Table,Voisins,Possibilites).
 	
 grille(Table) :-
 	Table = [
@@ -22,26 +22,11 @@ grille(Table) :-
 
 
 
-strict_member(E, [Head|_]) :- E == Head, !.
-strict_member(E, [_|Tail]) :- strict_member(E, Tail).
+strict_member(E, [T|_]) :- E == T, !.
+strict_member(E, [_|Q]) :- strict_member(E, Q).
 
-	
-possibilites([Case|Table], Groupes, Index, [Result|Results]) :-
-	 (var(Case) ->
-	 LigneIndex is Index div 9,
-	 ColonneIndex is Index mod 9 + 9,
-	 SecteurIndex is LigneIndex div 3 * 3 + ColonneIndex div 3 + 18,
-	 nth0(LigneIndex, Groupes, Ligne),
-	 nth0(ColonneIndex, Groupes, Colonne),
-	 nth0(SecteurIndex, Groupes, Secteur),
-	 append([Ligne, Colonne, Secteur], Voisins),
-	 flatten(Voisins, Voisins2),
-	 include(atomic, Voisins2, Voisins3),
-	 subtract([1,2,3,4,5,6,7,8,9],Voisins3,Result);
-	 Result = Case),
-	 writeln(Result),
-	 NewIndex is Index + 1,
-	 possibilites(Table,Groupes,NewIndex,Results);
+
+
 
 voisins([],_,[]).
 voisins([Case|Table],Groupes,[Result|Results]) :-
@@ -54,11 +39,17 @@ voisins([_|Table],Groupes,[Results]) :-
 	
 
 
-%possibilites([],_,[]).
-%possibilites([Case|Table],[Voisin|Voisins],[Result|Results]) :-
-	%not(integer(Case)),
-%	subtract([1,2,3,4,5,6,7,8,9],Voisin,Result),
-	%possibilites(Table,Voisins,Results).
+possibilites([],_,[]).
+possibilites([Case|Table],[Voisin|Voisins],[Result|Results]) :-
+	not(integer(Case)),
+	!,
+	subtract([1,2,3,4,5,6,7,8,9],Voisin,Result),
+	writeln(Result),
+	possibilites(Table,Voisins,Results).
+possibilites([Case|Table],Voisins,[Result|Results]):-
+	Result=Case,
+	writeln(Result),
+	possibilites(Table,Voisins,Results).
 
 % Liste qui contient les listes de tous lpes groupes (lignes, colonnes et secteurs)
 structure(Table, Groupes) :-
